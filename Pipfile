@@ -9,8 +9,9 @@ django = "*"
 pillow = "*"
 djangorestframework-simplejwt = "*"
 phonenumbers = "*"
-decouple = "*"
 rest-framework-simplejwt = "*"
+twilio = "*"
+python-decouple = "*"
 
 [dev-packages]
 

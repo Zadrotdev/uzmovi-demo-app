@@ -4,11 +4,12 @@ import phonenumbers
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from rest_framework.exceptions import ValidationError
-
-# from decouple import config
+from decouple import config
+from twilio.rest import Client
 
 email_regex = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b")
 phone_regex = re.compile(r"(\*[0-9]+\s*)?(\([0-9]+\))?[\s0-9\-]+[0-9]+")
+username_regex = re.compile(r"^(?=.{4,32}$)(?![_.-])(?!.*[_.]{2})[a-zA-Z0-9._-]+(?<![_.])$")
 
 
 def check_email_or_phone(email_or_phone):
@@ -27,6 +28,23 @@ def check_email_or_phone(email_or_phone):
         raise ValidationError(data)
 
     return email_or_phone
+
+
+def check_user_type(user_input):
+    # phone_number = phonenumbers.parse(user_input)
+    if re.fullmatch(email_regex, user_input):
+        user_input = 'email'
+    elif re.fullmatch(phone_regex, user_input):  # phonenumbers.is_valid_number(phone_number)
+        user_input = 'phone'
+    elif re.fullmatch(username_regex, user_input):
+        user_input = 'username'
+    else:
+        data = {
+            "success": False,
+            "message": "Email, username or phone is not valid."
+        }
+        raise ValidationError(data)
+    return user_input
 
 
 class EmailThread(threading.Thread):
@@ -66,5 +84,13 @@ def send_email(email, code):
         }
     )
 
-# def send_phone_code(phone, code):
-#     account_sid = config('account_sid')
+
+def send_phone_code(phone, code):
+    account_sid = config('account_sid')
+    auth_token = config('auth_token')
+    client = Client(account_sid, auth_token)
+    client.messages.create(
+        body=f"Hello friend ! your verification code: {code}\n",
+        from_="+998993303030",
+        to=f"{phone}",
+    )
