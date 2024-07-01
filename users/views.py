@@ -7,11 +7,13 @@ from rest_framework.utils.datetime_safe import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import permission_classes
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from base.utility import send_email
 from .serializers import SignUpSerializer, ChangeUserInformationSerializer, ChangeUserPhotoSerializer, \
-    LoginSerializer
+    LoginSerializer, LoginRefreshSerializer, LogoutSerializer
 from .models import User, DONE, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 
 
@@ -133,3 +135,27 @@ class ChangeUserPhotoView(APIView):
 
 class LoginView(TokenObtainPairView):
     serializer_class = LoginSerializer
+
+
+class LoginRefreshView(TokenRefreshView):
+    serializer_class = LoginRefreshSerializer
+
+
+class LogOutView(APIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = LogoutSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=self.request.data)
+        if serializer.is_valid(raise_exception=True):
+            try:
+                refresh_token = self.request.data['refresh']
+                token = RefreshToken(refresh_token)
+                token.blacklist()
+                data = {
+                    'success': True,
+                    "message": "Logged out successfully.",
+                }
+                return Response(data, status=205)
+            except TokenError:
+                return Response(status=400)

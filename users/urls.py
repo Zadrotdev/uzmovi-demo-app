@@ -1,10 +1,13 @@
 from django.urls import path
 from .serializers import SignUpSerializer
 from .views import CreateUserView, VerifyAPIView, GetNewVerification, \
-    ChangeUserInformationView, ChangeUserPhotoView, LoginView
+    ChangeUserInformationView, ChangeUserPhotoView, LoginView, LoginRefreshView, \
+    LogOutView
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
+    path('login/refresh/', LoginRefreshView.as_view(), name='login-refresh'),
+    path('logout/', LogOutView.as_view(), name='logout'),
     path('signup/', CreateUserView.as_view(), name='signup'),
     path('verify/', VerifyAPIView.as_view(), name='verify'),
     path('new-verify/', GetNewVerification.as_view(), name='new-verify'),
